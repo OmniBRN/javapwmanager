@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
@@ -20,6 +21,7 @@ public class Vault {
     public Vault(String vaultName, String password) throws Exception
     {
 
+
         SecureRandom random = new SecureRandom();
         MessageDigest md = MessageDigest.getInstance("SHA-256");
 
@@ -33,7 +35,8 @@ public class Vault {
 
         m_creationDate = LocalDateTime.now();
         m_vaultName = vaultName;
-        
+        m_categories = new ArrayList<Category>();
+        m_entries = new ArrayList<Entry>();
     }
 
     

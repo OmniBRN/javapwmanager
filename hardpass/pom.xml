@@ -26,5 +26,13 @@
     <artifactId>bcpg-jdk18on</artifactId>
     <version>1.72</version>
   </dependency>
+
+  <dependency>
+    <groupId>com.sshtools</groupId>
+    <artifactId>maverick-synergy</artifactId>
+    <version>3.1.0</version>
+  </dependency>
+  
   </dependencies>
+  
 </project>
