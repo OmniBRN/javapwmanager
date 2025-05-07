@@ -22,6 +22,15 @@ public class EntryLogin extends Entry {
     public void setEmail(String value){m_email = value;};
     public void setPassword(String value){m_password = value;};
 
+    public void generatePassword(boolean hasCapitalLetters, boolean hasSpecialCharacters, boolean hasDigits)
+    {
+        PasswordGenerator.setHasCapitalLetters(hasDigits);
+        PasswordGenerator.setHasCapitalLetters(hasCapitalLetters);
+        PasswordGenerator.setHasSpecialCharacters(hasSpecialCharacters);
+        m_password = PasswordGenerator.GetPassword();
+
+    }
+
     
 
 
