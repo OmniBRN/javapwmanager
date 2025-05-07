@@ -1,5 +1,6 @@
 package main.java.com.tudor;
-import org.apache.commons.math3.random.MersenneTwister;
+import java.security.SecureRandom;
+
 
 public class PasswordGenerator {
 
@@ -20,9 +21,9 @@ public class PasswordGenerator {
 
     static public String GetPassword()
     {
-        MersenneTwister mt = new MersenneTwister(System.currentTimeMillis());
+        SecureRandom random = new SecureRandom();
         String possibleLetters = letters;
-        String resultedPassword = "";
+        StringBuilder resultedPassword = new StringBuilder(passwordLength);
 
         if(hasCapitalLetters) possibleLetters += capitalLetters;
         if(hasSpecialCharacters) possibleLetters += specialCharacters;
@@ -33,10 +34,9 @@ public class PasswordGenerator {
         
         for(int i=0; i<passwordLength; i++)
         {
-            int result = mt.nextInt()%size;
-            if(result < 0) result += size;
-            resultedPassword += possibleLetters.charAt(result);
+            int result = random.nextInt(size);
+            resultedPassword.append(possibleLetters.charAt(result));
         }
-        return resultedPassword;
+        return resultedPassword.toString();
     }
 }
