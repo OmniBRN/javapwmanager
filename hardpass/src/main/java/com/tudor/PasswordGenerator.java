@@ -1,4 +1,4 @@
-package main.java.com.tudor;
+package com.tudor;
 import java.security.SecureRandom;
 
 

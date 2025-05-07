@@ -1,4 +1,4 @@
-package main.java.com.tudor;
+package com.tudor;
 
 public class EntryLogin extends Entry {
 

@@ -1,10 +1,10 @@
-package main.java.com.tudor;
+package com.tudor;
 
 import java.util.Scanner;
 // Ce vreau eu:
 // Daca folosesc scanc.read() -> citeste ca un string
 // scanc.readNextInt() -> citeste urmatorul int 
-public class scanc {
+public class Scanc {
 
     static Scanner m_fileInput = null;
     static boolean m_fileIsOpened = false;
