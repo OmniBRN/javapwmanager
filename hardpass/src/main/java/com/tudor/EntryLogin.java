@@ -9,7 +9,9 @@ public class EntryLogin extends Entry {
     public EntryLogin(String EntryName, String additionalNote, String password, String username, String email)
     {
         super(EntryName, additionalNote);
-        m_password = password;
+        if(password.equals(""))
+            generatePassword(true,true, true, 16);
+        else m_password = password;
         m_username = username;
         m_email = email;
     }
@@ -22,12 +24,14 @@ public class EntryLogin extends Entry {
     public void setEmail(String value){m_email = value;};
     public void setPassword(String value){m_password = value;};
 
-    public void generatePassword(boolean hasCapitalLetters, boolean hasSpecialCharacters, boolean hasDigits)
+    public void generatePassword(boolean hasCapitalLetters, boolean hasSpecialCharacters, boolean hasDigits, int length)
     {
         PasswordGenerator.setHasCapitalLetters(hasDigits);
         PasswordGenerator.setHasCapitalLetters(hasCapitalLetters);
         PasswordGenerator.setHasSpecialCharacters(hasSpecialCharacters);
+        PasswordGenerator.setPasswordLength(length);
         m_password = PasswordGenerator.GetPassword();
+
 
     }
 

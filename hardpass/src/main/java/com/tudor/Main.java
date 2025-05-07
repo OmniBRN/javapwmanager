@@ -29,10 +29,210 @@ public class Main {
         return Option;
     }
 
-    public static void ManageEntries()
+    public static void newEntry() throws Exception
     {
-            
+        System.out.println("Which type of entry:");
+        System.out.println("[0] Login Information\t[1] SSH Keys\t[2] PGP Keys\t[3] Exit");
+        int option2 = getInt();
+        switch(option2)
+        {
+            case 0:
+            {
+                System.out.println("Enter name of entry: (Required)");
+                String entryName = getLine();
+                System.out.println("Enter any additional notes: ");
+                String additionalNote = getLine();
+                System.out.println("Enter Password: (Leave empty to automatically generate)");
+                String password = getLine();
+                System.out.println("Enter any username associated with the account:");
+                String username = getLine();
+                System.out.println("Enter any email associated with this account: ");
+                String email = getLine();
+
+                Entry newLoginEntry = new EntryLogin(entryName, additionalNote, password, username, email);
+                userVault.addEntry(newLoginEntry);
+                break;
+            }
+            case 1: 
+            {
+                System.out.println("Enter entry name: (Required)");
+                String entryName = getLine();
+                System.out.println("Enter additional note: ");
+                String additionalNote = getLine();
+                System.out.println("Choose the type of SSH key type:");
+                System.out.println("[0] RSA\t[1] ECDSA\t[2] Ed25519");
+                int sshOption = getInt();
+                EntrySSH newSSHEntry = null;
+                int leave = 0;
+                switch(sshOption)
+                {
+                    case 0:
+                    {
+                        newSSHEntry = new EntrySSH(entryName, additionalNote, SSHType.RSA);
+                        break;
+                    }
+                    case 1:
+                    {
+                        newSSHEntry = new EntrySSH(entryName, additionalNote, SSHType.ECDSA);
+                        break;
+                    }
+                    case 2:
+                    {
+                        newSSHEntry = new EntrySSH(entryName, additionalNote, SSHType.Ed25519);
+                        break;
+                    }
+                    default:
+                    {
+                        System.out.println("Invalid SSH Type");
+                        leave = 121;
+                        
+                    }
+                }
+                if(leave==121)
+                    break;
+                
+                userVault.addEntry(newSSHEntry);
+
+                break;
+            }
+            case 2:
+            {
+                EntryPGP newEntryPGP = null;
+                System.out.println("Enter entry name: (Required)");
+                String entryName = getLine();
+                System.out.println("Enter additional note: ");
+                String additionalNote = getLine();
+                System.out.println("Enter some user info: ");
+                System.out.println("(Template: Jane Doe <Janedoe@email.com>)");
+                String userId = getLine();
+                newEntryPGP = new EntryPGP(entryName, additionalNote, userId);
+                userVault.addEntry(newEntryPGP);
+                break;
+            }
+        }
+
     }
+
+
+    public static void ManageEntries() throws Exception
+    {
+        System.out.println("Manage Entries");
+        List<Entry> tempEntries = userVault.getEntries();
+        int stop = 0;
+        while(stop==0)
+        {
+            int noEntries = tempEntries.size();
+            if(noEntries == 0)
+            {
+                System.out.println("There are no entries");
+                System.out.println("[N] New Entry\t[E] Exit");
+                char option = getChar();
+                switch (option) {
+                    case 'N':
+                    {
+                        newEntry();
+                        break;
+                    }
+                        
+                
+                    case 'E':
+                    {
+                        stop = 1;
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+            else
+                {
+                for(int i=0; i<noEntries; i++)
+                {
+                    Entry tempEntry = tempEntries.get(i);
+                    System.out.println("Entry [" + i + "]: " + tempEntry.getEntryName());
+                    
+                }
+                System.out.print("[N] New Entry\t[S] Show Entry Information\t[E] Exit");
+                char option = getChar();
+                if(option == 'E')
+                {
+                    stop = 1;
+                    continue;
+                }
+                if(option == 'N')
+                {
+                    newEntry();
+                    continue;
+                }
+                if(option == 'S')
+                {
+                    System.out.println("Enter the entries index:");
+                    int index = getInt();
+                    Entry tempEntry = tempEntries.get(index);
+                    if(tempEntry instanceof EntryLogin)    
+                    {
+                        EntryLogin temp = (EntryLogin) tempEntry;
+
+                        System.out.println("ID: " + temp.getId());
+
+                        System.out.println("Entry name: " + temp.getEntryName());
+
+                        if(!temp.getUsername().equals(""))
+                            System.out.println("Username: " + temp.getUsername());
+
+                        if(!temp.getEmail().equals(""))
+                            System.out.println("Email: " + temp.getEmail());
+
+                        System.out.println("Password: " + temp.getPassword());
+
+                        if(!temp.getAdditionalNote().equals(""))
+                            System.out.println("Additional notes: " + temp.getAdditionalNote());
+                        
+                    }
+                    if(tempEntry instanceof EntrySSH)    
+                    {
+                        EntrySSH temp = (EntrySSH) tempEntry;
+
+                        System.out.println("ID: " + temp.getId());
+
+                        System.out.println("Entry name: " + temp.getEntryName());
+
+                        System.out.println("Private key: " + temp.getPrivateKey());
+
+                        System.out.println("Public Key:" + temp.getPublicKey());
+
+                        if(!temp.getAdditionalNote().equals(""))
+                            System.out.println("Additional notes: " + temp.getAdditionalNote());
+
+                    }
+                    if(tempEntry instanceof EntryPGP)    
+                    {
+
+                        System.out.println("Work in progress sorry :(");
+                        // EntryPGP temp = (EntryLogin) tempEntry;
+
+                        // System.out.println("ID: " + temp.getId());
+
+                        // System.out.println("Entry name: " + temp.getEntryName());
+
+                        // if(!temp.getUsername().equals(""))
+                        //     System.out.println("Username: " + temp.getUsername());
+
+                        // if(!temp.getEmail().equals(""))
+                        //     System.out.println("Email: " + temp.getEmail());
+
+                        // System.out.println(temp.getPassword());
+
+                        // if(!temp.getAdditionalNote().equals(""))
+                        //     System.out.println("Additional notes: " + temp.getAdditionalNote());
+
+                    }
+
+                }
+                }
+        }
+    }
+    
 
     public static void newCategory()
     {
@@ -126,7 +326,7 @@ public class Main {
     }
 
 
-    public static void Menu()
+    public static void Menu() throws Exception
     {
         int stop = 0;
         while(stop==0)
@@ -139,7 +339,8 @@ public class Main {
             switch (Option) {
                 case 1:
                 {
-                       
+                    ManageEntries(); 
+                    break;
                 }
                 case 2:
                 {
