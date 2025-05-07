@@ -14,5 +14,15 @@ public class EntryLogin extends Entry {
         m_email = email;
     }
 
+    public String getUsername() {return m_username;};
+    public String getEmail() {return m_email;};
+    public String getPassword() {return m_password;};
+
+    public void setUsername(String value){m_username = value;};
+    public void setEmail(String value){m_email = value;};
+    public void setPassword(String value){m_password = value;};
+
+    
+
 
 }
