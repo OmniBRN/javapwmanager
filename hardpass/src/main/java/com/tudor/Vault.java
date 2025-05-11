@@ -20,8 +20,6 @@ public class Vault {
 
     public Vault(String vaultName, String password) throws Exception
     {
-
-
         SecureRandom random = new SecureRandom();
         MessageDigest md = MessageDigest.getInstance("SHA-256");
 
@@ -44,6 +42,16 @@ public class Vault {
     public String getHashedPassword() { return m_hashedPassword;};
     public LocalDateTime getCreationDate() { return m_creationDate;};
     public List<Category> getCategories() { return m_categories;};
+    public Category getCategory(UUID categoryId)
+    {
+        for(int i=0;i<m_categories.size(); i++)
+        {
+            if(m_categories.get(i).getId() == categoryId)
+                return m_categories.get(i);
+            
+        }
+        return null;
+    }
     public List<Entry> getEntries() { return m_entries;};
 
     public void setVaultName(String value){ m_vaultName = value;};

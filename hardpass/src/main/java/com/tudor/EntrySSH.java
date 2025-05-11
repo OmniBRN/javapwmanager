@@ -1,11 +1,9 @@
 package com.tudor;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import org.bouncycastle.util.encoders.UTF8;
 
 import com.sshtools.common.publickey.SshKeyPairGenerator;
 import com.sshtools.common.publickey.SshKeyUtils;

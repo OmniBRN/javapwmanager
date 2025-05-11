@@ -4,13 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
     
     static Vault userVault;
     static Scanner input = new Scanner(System.in);
 
-    public static int getInt()
+    public static void clearScreen()
+    {
+        System.out.println("\033c");
+    }
+
+    public static int getInt() 
     {
         int Option = Integer.parseInt(input.nextLine().stripLeading().stripTrailing());
         return Option;
@@ -29,6 +35,163 @@ public class Main {
         return Option;
     }
 
+    public static void checkEntry() throws Exception
+    {
+
+        List<Entry> tempEntries = userVault.getEntries();
+        System.out.println("Enter the entries index:");
+        int index = getInt();
+        Entry tempEntry = tempEntries.get(index);
+
+        int stop = 1;
+        while(stop == 1)
+        {
+            clearScreen();
+            if(tempEntry instanceof EntryLogin)    
+            {
+
+                EntryLogin temp = (EntryLogin) tempEntry;
+
+                System.out.println("ID: " + temp.getId());
+
+                System.out.println("Entry name: " + temp.getEntryName());
+
+                if(!temp.getUsername().equals(""))
+                    System.out.println("Username: " + temp.getUsername());
+
+                if(!temp.getEmail().equals(""))
+                    System.out.println("Email: " + temp.getEmail());
+
+                System.out.println("Password: " + temp.getPassword());
+
+                if(!temp.getAdditionalNote().equals(""))
+                    System.out.println("Additional notes: " + temp.getAdditionalNote());
+                
+                if(temp.getCategoryId() != null)
+                {
+                    Category tempCategory = userVault.getCategory(temp.getCategoryId());
+                    System.out.println("Category: " + tempCategory.getCategoryName());
+                }
+            } 
+            if(tempEntry instanceof EntrySSH)    
+            {
+                EntrySSH temp = (EntrySSH) tempEntry;
+
+                System.out.println("ID: " + temp.getId());
+
+                System.out.println("Entry name: " + temp.getEntryName());
+
+                System.out.println("Private key:\n" + temp.getPrivateKey());
+
+                System.out.println("Public Key:\n" + temp.getPublicKey());
+
+                if(!temp.getAdditionalNote().equals(""))
+                    System.out.println("Additional notes: " + temp.getAdditionalNote());
+
+            }
+            if(tempEntry instanceof EntryPGP)    
+            {
+
+                System.out.println("Work in progress sorry :(");
+                // EntryPGP temp = (EntryLogin) tempEntry;
+
+                // System.out.println("ID: " + temp.getId());
+
+                // System.out.println("Entry name: " + temp.getEntryName());
+
+                // if(!temp.getUsername().equals(""))
+                //     System.out.println("Username: " + temp.getUsername());
+
+                // if(!temp.getEmail().equals(""))
+                //     System.out.println("Email: " + temp.getEmail());
+
+                // System.out.println(temp.getPassword());
+
+                // if(!temp.getAdditionalNote().equals(""))
+                //     System.out.println("Additional notes: " + temp.getAdditionalNote());
+
+            }
+            System.out.println("[D] Delete Entry\t[E] Edit Entry\t[C] Category\t[Q] Quit");
+            char option = getChar();
+            switch(option)
+            {
+                case 'D':
+                {
+                    System.out.println("Are you sure?(Y/N)");
+                    char sure = getChar() ;
+                    if(sure == 'y'|| sure == 'Y')
+                    {
+                        stop = 0;
+                        userVault.removeEntry(tempEntry.getId());
+                    }
+                    break;
+                }
+                case 'E':
+                {
+
+                    break;
+                }
+                case 'C':
+                {
+                    List<Category> tempCategories = userVault.getCategories();
+                    List<UUID> tempCategoriesIds = new ArrayList<UUID>();
+                    if(tempEntry.getCategoryId() == null)
+                    {
+                         
+                        System.out.println("Choose a category: ");
+                        for(int i=0; i<tempCategories.size(); i++)
+                        {
+                            Category tempCategory = tempCategories.get(i);
+                            tempCategoriesIds.add(tempCategory.getId());
+                            System.out.println("[" + i  + "] " + tempCategory.getCategoryName());
+                        }
+                        int choice = getInt();
+                        tempEntry.setCategoryId(tempCategoriesIds.get(choice));
+                    }
+                    else
+                    {
+                        System.out.println("[C] Change Category\t[R] Remove Category\t[E] Exit");
+                        char choice = getChar();
+                        switch(choice)
+                        {
+                            case 'C':
+                            {
+                                System.out.println("Choose a category: ");
+                                for(int i=0; i<tempCategories.size(); i++)
+                                {
+                                    Category tempCategory = tempCategories.get(i);
+                                    tempCategoriesIds.add(tempCategory.getId());
+                                    System.out.println("[" + i  + "] " + tempCategory.getCategoryName());
+                                }
+                                int choice2 = getInt();
+                                tempEntry.setCategoryId(tempCategoriesIds.get(choice2));
+                                break;
+                            }
+                            case 'R':
+                            {
+                                tempEntry.setCategoryId(null);
+                                break;
+                            }
+                            case 'E':
+                            {
+                                break;
+                            }
+
+                        }
+                    }
+                    
+                    break;
+                }
+                case 'Q':
+                {
+                    stop = 0;
+                    break;
+                }
+            }
+        
+        }
+    }
+
     public static void newEntry() throws Exception
     {
         System.out.println("Which type of entry:");
@@ -38,7 +201,7 @@ public class Main {
         {
             case 0:
             {
-                System.out.println("Enter name of entry: (Required)");
+                System.out.println("Enter name of entry: ");
                 String entryName = getLine();
                 System.out.println("Enter any additional notes: ");
                 String additionalNote = getLine();
@@ -55,7 +218,7 @@ public class Main {
             }
             case 1: 
             {
-                System.out.println("Enter entry name: (Required)");
+                System.out.println("Enter entry name: ");
                 String entryName = getLine();
                 System.out.println("Enter additional note: ");
                 String additionalNote = getLine();
@@ -98,7 +261,7 @@ public class Main {
             case 2:
             {
                 EntryPGP newEntryPGP = null;
-                System.out.println("Enter entry name: (Required)");
+                System.out.println("Enter entry name: ");
                 String entryName = getLine();
                 System.out.println("Enter additional note: ");
                 String additionalNote = getLine();
@@ -121,6 +284,7 @@ public class Main {
         int stop = 0;
         while(stop==0)
         {
+            clearScreen();
             int noEntries = tempEntries.size();
             if(noEntries == 0)
             {
@@ -152,7 +316,7 @@ public class Main {
                     System.out.println("Entry [" + i + "]: " + tempEntry.getEntryName());
                     
                 }
-                System.out.print("[N] New Entry\t[S] Show Entry Information\t[E] Exit");
+                System.out.println("[N] New Entry\t[S] Show Entry Information\t[E] Exit");
                 char option = getChar();
                 if(option == 'E')
                 {
@@ -166,68 +330,7 @@ public class Main {
                 }
                 if(option == 'S')
                 {
-                    System.out.println("Enter the entries index:");
-                    int index = getInt();
-                    Entry tempEntry = tempEntries.get(index);
-                    if(tempEntry instanceof EntryLogin)    
-                    {
-                        EntryLogin temp = (EntryLogin) tempEntry;
-
-                        System.out.println("ID: " + temp.getId());
-
-                        System.out.println("Entry name: " + temp.getEntryName());
-
-                        if(!temp.getUsername().equals(""))
-                            System.out.println("Username: " + temp.getUsername());
-
-                        if(!temp.getEmail().equals(""))
-                            System.out.println("Email: " + temp.getEmail());
-
-                        System.out.println("Password: " + temp.getPassword());
-
-                        if(!temp.getAdditionalNote().equals(""))
-                            System.out.println("Additional notes: " + temp.getAdditionalNote());
-                        
-                    }
-                    if(tempEntry instanceof EntrySSH)    
-                    {
-                        EntrySSH temp = (EntrySSH) tempEntry;
-
-                        System.out.println("ID: " + temp.getId());
-
-                        System.out.println("Entry name: " + temp.getEntryName());
-
-                        System.out.println("Private key: " + temp.getPrivateKey());
-
-                        System.out.println("Public Key:" + temp.getPublicKey());
-
-                        if(!temp.getAdditionalNote().equals(""))
-                            System.out.println("Additional notes: " + temp.getAdditionalNote());
-
-                    }
-                    if(tempEntry instanceof EntryPGP)    
-                    {
-
-                        System.out.println("Work in progress sorry :(");
-                        // EntryPGP temp = (EntryLogin) tempEntry;
-
-                        // System.out.println("ID: " + temp.getId());
-
-                        // System.out.println("Entry name: " + temp.getEntryName());
-
-                        // if(!temp.getUsername().equals(""))
-                        //     System.out.println("Username: " + temp.getUsername());
-
-                        // if(!temp.getEmail().equals(""))
-                        //     System.out.println("Email: " + temp.getEmail());
-
-                        // System.out.println(temp.getPassword());
-
-                        // if(!temp.getAdditionalNote().equals(""))
-                        //     System.out.println("Additional notes: " + temp.getAdditionalNote());
-
-                    }
-
+                    checkEntry();
                 }
                 }
         }
@@ -252,6 +355,7 @@ public class Main {
         while(stop2 == 0)
         {
 
+        clearScreen();
         int noCategories = tempCategories.size();
         if(noCategories==0)
         {
@@ -331,6 +435,7 @@ public class Main {
         int stop = 0;
         while(stop==0)
         {
+            clearScreen();
             System.out.println("Options:");  
             System.out.println("[1] Manage Entries");
             System.out.println("[2] Manage Categories");
@@ -358,7 +463,7 @@ public class Main {
     }
     
     public static void main(String[] args) {
-        // Momentan nu o sa memorez nimic ca pana nu vad ca merge totul ;-;
+        // Momentan nu o sa memorez nimic pana nu vad ca merge totul ;-;
         System.out.println("Welcome to <name>\n"); 
         System.out.println("Enter a vault name:");
         String vaultName = getLine();
@@ -368,6 +473,7 @@ public class Main {
         {
             userVault = new Vault(vaultName, password);
             System.out.println("Vault Created!");
+            TimeUnit.SECONDS.sleep(1);
             Menu();
 
         }
