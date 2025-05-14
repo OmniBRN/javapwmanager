@@ -439,6 +439,7 @@ public class Main {
             System.out.println("Options:");  
             System.out.println("[1] Manage Entries");
             System.out.println("[2] Manage Categories");
+            System.out.println("[4] DEBUG");
             System.out.println("[3] Exit");
             int Option = getInt();
             switch (Option) {
@@ -455,6 +456,10 @@ public class Main {
                 case 3:
                     stop = 1;
                     break;
+                case 4:
+                {
+                    VaultImportExport.exportToFile(userVault);
+                }
                 default:
                     continue;
             }

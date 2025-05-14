@@ -10,6 +10,8 @@ import org.pgpainless.key.generation.type.rsa.RsaLength;
 public class EntryPGP extends Entry{
 
     private PGPSecretKeyRing keyRing;
+    private String m_privateKey;
+    private String m_publicKey;
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -23,15 +25,17 @@ public class EntryPGP extends Entry{
         keyRing = PGPainless.generateKeyRing()
             .simpleRsaKeyRing(userId, RsaLength._4096);
 
+        m_publicKey =  keyRing.getPublicKey().toString();
+        m_privateKey =  keyRing.getSecretKey().toString();
     }
 
     public String getPublicKey()
     {
-        return keyRing.getPublicKey().toString();
+        return m_publicKey;
     }
     public String getPrivateKey()
     {
-        return keyRing.getSecretKey().toString();
+        return m_privateKey;
     }
 
     // public String EncryptMessage(String message)

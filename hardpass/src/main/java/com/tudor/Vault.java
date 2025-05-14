@@ -40,6 +40,7 @@ public class Vault {
     
     public String getVaultName(){ return m_vaultName;};
     public String getHashedPassword() { return m_hashedPassword;};
+    public String getSalt(){return m_salt;};
     public LocalDateTime getCreationDate() { return m_creationDate;};
     public List<Category> getCategories() { return m_categories;};
     public Category getCategory(UUID categoryId)

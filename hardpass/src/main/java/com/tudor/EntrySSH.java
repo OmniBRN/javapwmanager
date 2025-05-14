@@ -10,13 +10,16 @@ import com.sshtools.common.publickey.SshKeyUtils;
 import com.sshtools.common.ssh.components.SshKeyPair;
 
 public class EntrySSH extends Entry{
-    SshKeyPair m_keyPair;
-    SSHType m_sshType;
+    private SshKeyPair m_keyPair;
+    private String m_publicKey;
+    private String m_privateKey;
+    private SSHType m_sshType;
 
     public EntrySSH(String entryName, String additionalNote, SSHType sshType) throws Exception
     {
         super(entryName, additionalNote);
-        switch(sshType)
+        m_sshType = sshType;
+        switch(m_sshType)
         {
             case RSA:
             {
@@ -46,27 +49,31 @@ public class EntrySSH extends Entry{
             }
         }
 
+        String nullString = null, nullString2 = null;
+        File tempFile = File.createTempFile("ssh-private-key-", ".tmp");
+        tempFile.deleteOnExit();
+        SshKeyUtils.createPrivateKeyFile(m_keyPair, nullString, tempFile);
+        m_privateKey = Files.readString(tempFile.toPath());
+
+        File tempFile2 = File.createTempFile("ssh-public-key-", ".tmp");
+        tempFile2.deleteOnExit();
+        SshKeyUtils.createPublicKeyFile(m_keyPair.getPublicKey(), nullString2, tempFile2);
+        m_publicKey =  Files.readString(tempFile2.toPath());
+
+
     }
+
+    public String getSSHType() {return m_sshType.toString();};
 
     public String getPrivateKey() throws Exception
     {
 
-        File tempFile = File.createTempFile("ssh-private-key-", ".tmp");
-        tempFile.deleteOnExit();
-        String nullString = null;
-        SshKeyUtils.createPrivateKeyFile(m_keyPair, nullString, tempFile);
-        return Files.readString(tempFile.toPath());
+        return m_privateKey;
     }
     public String getPublicKey() throws IOException
     {
-        File tempFile = File.createTempFile("ssh-public-key-", ".tmp");
-        tempFile.deleteOnExit();
-        String nullString = null;
-        SshKeyUtils.createPublicKeyFile(m_keyPair.getPublicKey(), nullString, tempFile);
-        return Files.readString(tempFile.toPath());
-
+        return m_publicKey;
     }
-
 
 
 }
