@@ -1,6 +1,7 @@
 package com.tudor;
 
 import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,9 +49,10 @@ public class VaultImportExport {
 
         }
         System.out.println(data.toString());
-        TimeUnit.SECONDS.sleep(60);
-        // Path file = Paths.get("test");
-        // Files.write(file, data);
+        byte[] byteArray = data.toString().getBytes(StandardCharsets.UTF_8);
+        
+        Path file = Paths.get("test");
+        Files.write(file, byteArray);
           
     }
 }

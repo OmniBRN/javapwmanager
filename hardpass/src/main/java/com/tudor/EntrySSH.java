@@ -67,7 +67,6 @@ public class EntrySSH extends Entry{
 
     public String getPrivateKey() throws Exception
     {
-
         return m_privateKey;
     }
     public String getPublicKey() throws IOException
