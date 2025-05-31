@@ -4,9 +4,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 
 public class VaultImportExport {
+    static public Vault importUserVault()
+    {
+        return null;
+    }
     static public void exportToFile(Vault userVault) throws Exception
     {
 
@@ -16,7 +21,7 @@ public class VaultImportExport {
         data.append("SALT:" + userVault.getSalt() + "\n");
         data.append("CREATION_DATE:" + userVault.getCreationDate() + "\n");
         data.append("CATEGORIES:\n");
-        List<Category> categories = userVault.getCategories();
+        HashMap<Integer, Category> categories = userVault.getCategories();
         for(int i=0; i<categories.size(); i++)
         {
             data.append("#" + "ID:" + categories.get(i).getId() + "/" + categories.get(i).getCategoryName() + "\n");

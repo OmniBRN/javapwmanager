@@ -1,15 +1,18 @@
 package com.tudor;
 
+import java.io.ByteArrayOutputStream;
 import java.security.Security;
 
+import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 
 public class EntryPGP extends Entry{
 
-    private PGPSecretKeyRing keyRing;
     private String m_privateKey;
     private String m_publicKey;
 
@@ -22,11 +25,24 @@ public class EntryPGP extends Entry{
     {
         super(EntryName, additionalNote);
 
-        keyRing = PGPainless.generateKeyRing()
+        PGPSecretKeyRing keyRing = PGPainless.generateKeyRing()
             .simpleRsaKeyRing(userId, RsaLength._4096);
 
-        m_publicKey =  keyRing.getPublicKey().toString();
-        m_privateKey =  keyRing.getSecretKey().toString();
+        // Extracting the private key
+        PGPSecretKey secretKey = keyRing.getSecretKey();
+        ByteArrayOutputStream outPrivate = new ByteArrayOutputStream();
+        ArmoredOutputStream armoredOutPrivate = new ArmoredOutputStream(outPrivate);
+        secretKey.encode(armoredOutPrivate);
+        armoredOutPrivate.close();
+        m_privateKey =  outPrivate.toString("UTF-8");
+
+        // Extracting the public key
+        PGPPublicKey publicKey = keyRing.getPublicKey();
+        ByteArrayOutputStream outPublic = new ByteArrayOutputStream();
+        ArmoredOutputStream armoredOutPublic = new ArmoredOutputStream(outPublic);
+        publicKey.encode(armoredOutPublic);
+        armoredOutPublic.close();
+        m_publicKey = outPublic.toString("UTF-8");
     }
 
     public String getPublicKey()

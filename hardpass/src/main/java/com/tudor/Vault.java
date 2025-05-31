@@ -1,11 +1,12 @@
 package com.tudor;
 
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,9 +18,28 @@ public class Vault {
     private String m_hashedPassword;
     private String m_salt;
     private LocalDateTime m_creationDate;
-    private List<Category> m_categories;
+    private HashMap<Integer, Category> m_categories;
     private List<Entry> m_entries;
 
+    static public Vault CreateVault()
+    {
+        System.out.println("Welcome to <name>\n"); 
+        System.out.println("Enter a vault name:");
+        String vaultName = Service.getLine();
+        System.out.println("Enter a master password (Don't forget it, you won't be able to access the passwords)");
+        String password = Service.getLine();
+        try
+        {
+            Vault userVault = new Vault(vaultName, password);
+            System.out.println("Vault created!\n");
+            return userVault;
+
+        }
+        catch (Exception e) {
+            System.out.println("ERROR:" + e.getMessage());
+        }
+        return null;
+    }
 
     public Vault(String vaultName, String password) throws Exception
     {
@@ -48,7 +68,7 @@ public class Vault {
 
         m_creationDate = LocalDateTime.now();
         m_vaultName = vaultName;
-        m_categories = new ArrayList<Category>();
+        m_categories = new HashMap<Integer, Category>();
         m_entries = new ArrayList<Entry>();
     }
 
@@ -56,7 +76,9 @@ public class Vault {
     public String getVaultName(){ return m_vaultName;};
     public String getHashedPassword() { return m_hashedPassword;};
     public String getSalt(){return m_salt;};
-    public LocalDateTime getCreationDate() { return m_creationDate;}; public List<Category> getCategories() { return m_categories;}; public Category getCategory(UUID categoryId) {
+    public LocalDateTime getCreationDate() { return m_creationDate;}; 
+    public HashMap<Integer, Category> getCategories() { return m_categories;};
+    public Category getCategory(UUID categoryId) {
         for(int i=0;i<m_categories.size(); i++)
         {
             if(m_categories.get(i).getId() == categoryId)
@@ -68,7 +90,10 @@ public class Vault {
     public List<Entry> getEntries() { return m_entries;};
 
     public void setVaultName(String value){ m_vaultName = value;};
-    public void addCategory(Category value) {m_categories.add(value);};
+    public void addCategory(Category value) {
+        int noCategories = m_categories.size();
+        m_categories.put(noCategories, value);
+    };
     public void addEntry(Entry value){m_entries.add(value);};
 
     public void removeCategory(UUID categoryId)
@@ -97,15 +122,25 @@ public class Vault {
 
     public boolean CheckPassword(String passwordTry) throws Exception
     {
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        byte[] temp_salt = Base64.getDecoder().decode(m_salt);
-        md.update(temp_salt);
-        String passwordTryHash = Base64.getEncoder().encodeToString(md.digest(passwordTry.getBytes(StandardCharsets.UTF_8)));
+
         
-        System.out.println(passwordTryHash);
+        Argon2Parameters.Builder builder = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
+            .withVersion(Argon2Parameters.ARGON2_VERSION_13)
+            .withIterations(2)
+            .withMemoryAsKB(65536)
+            .withParallelism(2)
+            .withSalt(m_salt.getBytes(StandardCharsets.UTF_8));
+
+        Argon2BytesGenerator generate = new Argon2BytesGenerator();
+        generate.init(builder.build());
+        byte[] result = new byte [32];
+        generate.generateBytes(passwordTry.getBytes(StandardCharsets.UTF_8), result, 0, result.length);
+        
+        String resultString = Arrays.toString(result);
+        System.out.println(resultString);
         System.out.println(m_hashedPassword);
 
-        return passwordTryHash.equals(m_hashedPassword);
+        return resultString.equals(m_hashedPassword);
         
     }
     
