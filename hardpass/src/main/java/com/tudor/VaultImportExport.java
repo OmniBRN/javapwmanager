@@ -1,12 +1,10 @@
 package com.tudor;
 
-import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class VaultImportExport {
     static public void exportToFile(Vault userVault) throws Exception

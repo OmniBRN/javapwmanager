@@ -5,17 +5,12 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator;
 import org.bouncycastle.crypto.params.Argon2Parameters;
-import static org.junit.Assert.assertTrue;
-
-import de.mkammerer.argon2.Argon2;
-import de.mkammerer.argon2.Argon2Factory;
 
 public class Vault {
     private String m_vaultName;
@@ -28,7 +23,6 @@ public class Vault {
 
     public Vault(String vaultName, String password) throws Exception
     {
-        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id);
         SecureRandom random = new SecureRandom();
         byte[] temp_salt = new byte[16];
         random.nextBytes(temp_salt);
@@ -49,14 +43,7 @@ public class Vault {
         byte[] testHash = new byte[32];
         verifier.generateBytes(password.getBytes(StandardCharsets.UTF_8), testHash, 0, testHash.length);
 
-        assertTrue(Arrays.equals(result,testHash));
-
-
-        // MessageDigest md = MessageDigest.getInstance("SHA-256");
-        // md.update(temp_salt);
-
-        // byte[] temp_hashedPassword = md.digest(password.getBytes(StandardCharsets.UTF_8));
-        // m_hashedPassword = Base64.getEncoder().encodeToString(temp_hashedPassword);
+        m_hashedPassword = Base64.getEncoder().encodeToString(result);
         m_salt = Base64.getEncoder().encodeToString(temp_salt);
 
         m_creationDate = LocalDateTime.now();
@@ -69,10 +56,7 @@ public class Vault {
     public String getVaultName(){ return m_vaultName;};
     public String getHashedPassword() { return m_hashedPassword;};
     public String getSalt(){return m_salt;};
-    public LocalDateTime getCreationDate() { return m_creationDate;};
-    public List<Category> getCategories() { return m_categories;};
-    public Category getCategory(UUID categoryId)
-    {
+    public LocalDateTime getCreationDate() { return m_creationDate;}; public List<Category> getCategories() { return m_categories;}; public Category getCategory(UUID categoryId) {
         for(int i=0;i<m_categories.size(); i++)
         {
             if(m_categories.get(i).getId() == categoryId)

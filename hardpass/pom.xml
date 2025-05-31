@@ -38,7 +38,7 @@
       <artifactId>pgpainless-core</artifactId>
       <version>1.6.6</version>
   </dependency>        
-      <dependency>
+  <dependency>
       <groupId>de.mkammerer</groupId>
       <artifactId>argon2-jvm</artifactId>
       <version>2.7</version>
@@ -50,6 +50,14 @@
       <version>5.11.0-M2</version>
       <scope>test</scope>
   </dependency>
+
+<dependency>
+    <groupId>junit</groupId>
+    <artifactId>junit</artifactId>
+    <version>4.8.1</version>
+    <scope>test</scope>
+</dependency>
+
 
   </dependencies>
   
