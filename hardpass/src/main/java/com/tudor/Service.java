@@ -345,7 +345,7 @@ public class Service {
                 {
                     checkEntry();
                 }
-                }
+            }
         }
     }
     
@@ -469,7 +469,7 @@ public class Service {
                     break;
                 case 4:
                 {
-                    VaultImportExport.exportToFile(m_userVault);
+                    VaultImportExport.exportToDB(m_userVault);
                 }
                 default:
                     continue;

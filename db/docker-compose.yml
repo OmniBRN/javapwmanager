@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: pwmanager-postgres
+    environment:
+      POSTGRES_USER: javapwmanager
+      POSTGRES_PASSWORD: ^xcEXi7g
+      POSTGRES_DB: javapwmanagerDB
+    volumes:
+      - pwmanager-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U javapwmanager -d javapwmanagerDB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pwmanager-data:

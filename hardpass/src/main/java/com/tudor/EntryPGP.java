@@ -20,6 +20,12 @@ public class EntryPGP extends Entry{
         Security.addProvider(new BouncyCastleProvider());
     } 
 
+    public EntryPGP(String EntryName, String additionalNote, String privateKey, String publicKey) throws Exception
+    {
+        super(EntryName, additionalNote);
+        m_privateKey = privateKey;
+        m_publicKey = publicKey;
+    }
     //format of userId: user <email> 
     public EntryPGP(String EntryName, String additionalNote, String userId) throws Exception
     {

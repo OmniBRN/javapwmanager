@@ -6,6 +6,12 @@ public class Category {
     private UUID m_id;
     private String m_categoryName;
 
+    public Category(UUID id, String categoryName)
+    {
+        m_id = id;
+        m_categoryName = categoryName;
+    }
+
     public Category(String categoryName)
     {
         m_id = UUID.randomUUID();

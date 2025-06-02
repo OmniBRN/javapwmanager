@@ -9,6 +9,8 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator;
 import org.bouncycastle.crypto.params.Argon2Parameters;
@@ -32,6 +34,18 @@ public class Vault {
         {
             Vault userVault = new Vault(vaultName, password);
             System.out.println("Vault created!\n");
+            String query = "INSERT INTO vault (name, hashed_password, salt, creation_date) VALUES (?, ?, ?, ?)";
+            try(Connection con = Database.getConnection();
+                PreparedStatement stmt = con.prepareStatement(query);
+            )
+            {
+                stmt.setString(1, userVault.getVaultName());
+                stmt.setString(2, userVault.getHashedPassword());
+                stmt.setString(3, userVault.getSalt());
+                stmt.setObject(4, userVault.getCreationDate());
+                stmt.executeUpdate();
+            }
+
             return userVault;
 
         }
@@ -41,11 +55,21 @@ public class Vault {
         return null;
     }
 
+    public Vault(String vaultName, String hashedPassword, String salt, LocalDateTime creationDate, HashMap<Integer, Category> categories, List<Entry> entries) {
+        m_vaultName = vaultName;
+        m_hashedPassword = hashedPassword;
+        m_salt = salt;
+        m_creationDate = creationDate;
+        m_categories = categories;
+        m_entries = entries;
+    }
     public Vault(String vaultName, String password) throws Exception
     {
         SecureRandom random = new SecureRandom();
         byte[] temp_salt = new byte[16];
         random.nextBytes(temp_salt);
+        m_salt = Base64.getEncoder().encodeToString(temp_salt);
+        temp_salt = m_salt.getBytes(StandardCharsets.UTF_8);
         Argon2Parameters.Builder builder = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
             .withVersion(Argon2Parameters.ARGON2_VERSION_13)
             .withIterations(2)
@@ -64,7 +88,6 @@ public class Vault {
         verifier.generateBytes(password.getBytes(StandardCharsets.UTF_8), testHash, 0, testHash.length);
 
         m_hashedPassword = Base64.getEncoder().encodeToString(result);
-        m_salt = Base64.getEncoder().encodeToString(temp_salt);
 
         m_creationDate = LocalDateTime.now();
         m_vaultName = vaultName;
@@ -136,10 +159,7 @@ public class Vault {
         byte[] result = new byte [32];
         generate.generateBytes(passwordTry.getBytes(StandardCharsets.UTF_8), result, 0, result.length);
         
-        String resultString = Arrays.toString(result);
-        System.out.println(resultString);
-        System.out.println(m_hashedPassword);
-
+        String resultString = Base64.getEncoder().encodeToString(result);
         return resultString.equals(m_hashedPassword);
         
     }

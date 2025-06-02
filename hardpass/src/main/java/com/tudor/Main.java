@@ -2,6 +2,7 @@ package com.tudor;
 
 import java.util.concurrent.TimeUnit;
 
+
 public class Main {
     
     public static void main(String[] args) throws Exception {
@@ -25,6 +26,7 @@ public class Main {
             String passwordAttempt = Service.getLine();
             if(userVault.CheckPassword(passwordAttempt))
             {
+                // VaultImportExport.decryptVault(userVault, passwordAttempt);
                 System.out.println("Logged in successfully!");
                 TimeUnit.SECONDS.sleep(1);
                 Service.m_userVault = userVault;

@@ -10,14 +10,21 @@ import com.sshtools.common.publickey.SshKeyUtils;
 import com.sshtools.common.ssh.components.SshKeyPair;
 
 public class EntrySSH extends Entry{
-    private SshKeyPair m_keyPair;
     private String m_publicKey;
     private String m_privateKey;
     private SSHType m_sshType;
 
+    public EntrySSH(String entryName, String additionalNote, SSHType sshType, String publicKey, String privateKey) throws Exception
+    {
+        super(entryName, additionalNote);
+        m_sshType = sshType;
+        m_publicKey = publicKey;
+        m_privateKey = privateKey;
+    }
     public EntrySSH(String entryName, String additionalNote, SSHType sshType) throws Exception
     {
         super(entryName, additionalNote);
+        SshKeyPair m_keyPair = new SshKeyPair();
         m_sshType = sshType;
         switch(m_sshType)
         {
