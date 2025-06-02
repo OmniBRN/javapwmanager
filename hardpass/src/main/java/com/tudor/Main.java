@@ -12,8 +12,10 @@ public class Main {
         {
             
             userVault = Vault.CreateVault();
+            Audit.AddToAudit("Created Vault");
             if(userVault == null)
             {
+                Audit.AddToAudit("Failed miserably at creating a Vault");
                 System.out.println("Bye this all wrong");
                 return;
             }
@@ -28,6 +30,7 @@ public class Main {
             String passwordAttempt = Service.getLine();
             if(userVault.CheckPassword(passwordAttempt))
             {
+                Audit.AddToAudit("Entered Correct Password");
                 Vault decryptedVault = VaultImportExport.decryptVault(userVault, passwordAttempt);
                 System.out.println("Logged in successfully!");
                 TimeUnit.SECONDS.sleep(1);
@@ -36,7 +39,10 @@ public class Main {
 
                 Vault encryptedVault = VaultImportExport.encryptVault(decryptedVault, passwordAttempt, decryptedVault.getSalt());
                 VaultImportExport.exportToDB(encryptedVault);
+                Audit.AddToAudit("Closed The Password Manager");
             }
+            else 
+                Audit.AddToAudit("Entered Wrong Password");
             
         }
     } 

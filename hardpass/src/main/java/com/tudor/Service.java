@@ -1,5 +1,7 @@
 package com.tudor;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -136,6 +138,7 @@ public class Service {
                         VaultImportExport.deleteEntry(tempEntry.getId());
                         m_userVault.removeEntry(tempEntry.getId());
                     }
+                    Audit.AddToAudit("Deleted Entry");
                     break;
                 }
                 case 'E':
@@ -145,6 +148,7 @@ public class Service {
                         boolean stop1984 = true;
                         while(stop1984) 
                         {
+                            Audit.AddToAudit("Edit Entry");
                             stop1984 = false;
                         }
                     }
@@ -172,6 +176,7 @@ public class Service {
                         }
                         int choice = getInt();
                         tempEntry.setCategoryId(tempCategoriesIds.get(choice));
+                        Audit.AddToAudit("Added category to Entry");
                     }
                     else
                     {
@@ -190,11 +195,13 @@ public class Service {
                                 }
                                 int choice2 = getInt();
                                 tempEntry.setCategoryId(tempCategoriesIds.get(choice2));
+                                Audit.AddToAudit("Added Category from Entry");
                                 break;
                             }
                             case 'R':
                             {
                                 tempEntry.setCategoryId(null);
+                                Audit.AddToAudit("Remove Category from Entry");
                                 break;
                             }
                             case 'E':
@@ -321,6 +328,7 @@ public class Service {
                     case 'N':
                     {
                         newEntry();
+                        Audit.AddToAudit("Created New Entry");
                         break;
                     }
                         
@@ -352,6 +360,7 @@ public class Service {
                 if(option == 'N')
                 {
                     newEntry();
+                    Audit.AddToAudit("Created New Entry");
                     continue;
                 }
                 if(option == 'S')
@@ -372,7 +381,7 @@ public class Service {
         m_userVault.addCategory(newCategory);
     }
 
-    public static void ManageCategories()
+    public static void ManageCategories() throws IOException, SQLException
     {
         System.out.println("Manage Categories");
         HashMap<Integer, Category> tempCategories = m_userVault.getCategories();
@@ -391,6 +400,7 @@ public class Service {
                 case 'A':
                 {
                     newCategory();
+                    Audit.AddToAudit("Created a New Category");
                     break;
                 }
             
@@ -409,6 +419,7 @@ public class Service {
         else
         {
 
+            noCategories = tempCategories.size();
             List<UUID> idsList = new ArrayList<UUID>(); 
             for(Integer i=0; i<noCategories; i++)
             {
@@ -427,6 +438,7 @@ public class Service {
                 case 'A':
                 {
                     newCategory();
+                    Audit.AddToAudit("Created New Category");
                     break;
                 }
 
@@ -436,6 +448,8 @@ public class Service {
                     System.out.println("Choose which category to delete");
                     int categoryIndex = getInt();
                     m_userVault.removeCategory(idsList.get(categoryIndex));
+                    VaultImportExport.deleteCategory(idsList.get(categoryIndex));
+                    Audit.AddToAudit("Created Delete Category");
                     break;
                 }
 

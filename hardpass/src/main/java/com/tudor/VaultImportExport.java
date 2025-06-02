@@ -161,6 +161,17 @@ public class VaultImportExport {
             }
     }
 
+    static public void deleteCategory(UUID id) throws SQLException
+    {
+        String query = "DELETE FROM category WHERE id = ?";
+        try(Connection con = Database.getConnection();
+            PreparedStatement stmt = con.prepareStatement(query))
+            {
+                stmt.setObject(1, id);
+                stmt.executeUpdate();
+            }
+    }
+
     static private String encryptMessage(String message, String password, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException
     {
 
