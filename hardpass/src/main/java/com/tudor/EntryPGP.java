@@ -2,6 +2,7 @@ package com.tudor;
 
 import java.io.ByteArrayOutputStream;
 import java.security.Security;
+import java.util.UUID;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -20,9 +21,9 @@ public class EntryPGP extends Entry{
         Security.addProvider(new BouncyCastleProvider());
     } 
 
-    public EntryPGP(String EntryName, String additionalNote, String privateKey, String publicKey) throws Exception
+    public EntryPGP(UUID id, String EntryName, String additionalNote, String privateKey, String publicKey) throws Exception
     {
-        super(EntryName, additionalNote);
+        super(id, EntryName, additionalNote);
         m_privateKey = privateKey;
         m_publicKey = publicKey;
     }

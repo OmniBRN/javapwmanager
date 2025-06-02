@@ -3,7 +3,7 @@ package com.tudor;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-
+import java.util.UUID;
 
 import com.sshtools.common.publickey.SshKeyPairGenerator;
 import com.sshtools.common.publickey.SshKeyUtils;
@@ -14,6 +14,14 @@ public class EntrySSH extends Entry{
     private String m_privateKey;
     private SSHType m_sshType;
 
+    public EntrySSH(UUID id, String entryName, String additionalNote, SSHType sshType, String publicKey, String privateKey) throws Exception
+    {
+
+        super(id, entryName, additionalNote);
+        m_sshType = sshType;
+        m_publicKey = publicKey;
+        m_privateKey = privateKey;
+    }
     public EntrySSH(String entryName, String additionalNote, SSHType sshType, String publicKey, String privateKey) throws Exception
     {
         super(entryName, additionalNote);

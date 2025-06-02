@@ -1,11 +1,23 @@
 package com.tudor;
 
+import java.util.UUID;
+
 public class EntryLogin extends Entry {
 
     private String m_username;
     private String m_email;
     private String m_password;
 
+    public EntryLogin(UUID id, String EntryName, String additionalNote, String password, String username, String email)
+    {
+
+        super(id, EntryName, additionalNote);
+        if(password.equals(""))
+            generatePassword(true,true, true, 16);
+        else m_password = password;
+        m_username = username;
+        m_email = email;
+    }
     public EntryLogin(String EntryName, String additionalNote, String password, String username, String email)
     {
         super(EntryName, additionalNote);

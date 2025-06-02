@@ -71,6 +71,7 @@ public class VaultImportExport {
 
                 while(rs3.next())
                 {
+                    UUID entryId = rs3.getObject("id", UUID.class);
                     int entryType = rs3.getInt("entry_type");
                     String name = rs3.getString("name");
                     UUID category_id = rs3.getObject("category_id", UUID.class);
@@ -82,7 +83,7 @@ public class VaultImportExport {
                             String username = rs3.getString("username");
                             String email = rs3.getString("email");
                             String password = rs3.getString("password");
-                            EntryLogin entryLogin = new EntryLogin(name, notes, password, username, email);
+                            EntryLogin entryLogin = new EntryLogin(entryId, name, notes, password, username, email);
                             entryLogin.setCategoryId(category_id);
                             encryptedEntries.add(entryLogin);
                             break;
@@ -100,7 +101,7 @@ public class VaultImportExport {
                             if(intSSHType == 3)
                                 SSHType = com.tudor.SSHType.Ed25519; 
 
-                            EntrySSH entrySSH = new EntrySSH(name, notes, SSHType, publicKey, privateKey);
+                            EntrySSH entrySSH = new EntrySSH(entryId, name, notes, SSHType, publicKey, privateKey);
                             encryptedEntries.add(entrySSH);
                             break;
                         }
@@ -108,7 +109,7 @@ public class VaultImportExport {
                         {
                             String privateKey = rs3.getString("private_key_pgp");
                             String publicKey = rs3.getString("public_key_pgp");
-                            EntryPGP entryPGP = new EntryPGP(name, notes, privateKey, publicKey);
+                            EntryPGP entryPGP = new EntryPGP(entryId, name, notes, privateKey, publicKey);
                             encryptedEntries.add(entryPGP);
                             break;
                         }
@@ -161,9 +162,10 @@ public class VaultImportExport {
             {
                 stmt.setObject(1, t_category.getId());
                 ResultSet rs = stmt.executeQuery();
-                if(rs.next() && rs.getInt("count") == 0)
-                {
-                    insert = true;
+                if(rs.next())
+                { 
+                    if(rs.getInt("count") == 0)
+                        insert = true;
                 }
             }
             if(insert)
@@ -203,9 +205,10 @@ public class VaultImportExport {
             {
                 stmt.setObject(1, t_entry.getId());
                 ResultSet rs = stmt.executeQuery();
-                if(rs.next() && rs.getInt("count") == 0)
-                {
-                    insert = true;
+                if(rs.next())
+                { 
+                    if(rs.getInt("count") == 0)
+                        insert = true;
                 }
             }
 
@@ -289,7 +292,7 @@ public class VaultImportExport {
                         stmt.setString(2, t_entryPGP.getEntryName());
                         stmt.setObject(3, t_entryPGP.getCategoryId());
                         stmt.setString(4, t_entryPGP.getAdditionalNote());
-                        stmt.setInt(5, 2);
+                        stmt.setInt(5, 3);
                         stmt.setString(6, t_entryPGP.getPublicKey());
                         stmt.setString(7, t_entryPGP.getPrivateKey());
                         stmt.executeUpdate();

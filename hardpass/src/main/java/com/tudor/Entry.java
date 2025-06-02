@@ -9,6 +9,13 @@ public class Entry {
     private UUID m_categoryId;
     private String m_additionalNote;
 
+
+    public Entry (UUID id, String entryName, String additionalNote)
+    {
+        this.m_id = id;
+        this.m_entryName = entryName;
+        this.m_additionalNote = additionalNote;
+    }
     public Entry(String entryName, String additionalNote)
     {
         this.m_id = UUID.randomUUID();
