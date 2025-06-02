@@ -10,6 +10,7 @@ public class Main {
         Vault userVault = VaultImportExport.importUserVault();
         if(userVault == null) 
         {
+            
             userVault = Vault.CreateVault();
             if(userVault == null)
             {
@@ -19,6 +20,7 @@ public class Main {
             Service.m_userVault = userVault;
             TimeUnit.SECONDS.sleep(1);
             Service.Menu();
+
         }
         else
         {
@@ -26,11 +28,14 @@ public class Main {
             String passwordAttempt = Service.getLine();
             if(userVault.CheckPassword(passwordAttempt))
             {
-                // VaultImportExport.decryptVault(userVault, passwordAttempt);
+                Vault decryptedVault = VaultImportExport.decryptVault(userVault, passwordAttempt);
                 System.out.println("Logged in successfully!");
                 TimeUnit.SECONDS.sleep(1);
-                Service.m_userVault = userVault;
+                Service.m_userVault = decryptedVault;
                 Service.Menu();
+
+                Vault encryptedVault = VaultImportExport.encryptVault(decryptedVault, passwordAttempt, decryptedVault.getSalt());
+                VaultImportExport.exportToDB(encryptedVault);
             }
             
         }

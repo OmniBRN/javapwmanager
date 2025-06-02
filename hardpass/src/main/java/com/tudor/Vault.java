@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -33,16 +32,17 @@ public class Vault {
         try
         {
             Vault userVault = new Vault(vaultName, password);
+            Vault encryptedVault = VaultImportExport.encryptVault(userVault, password, userVault.getSalt());
             System.out.println("Vault created!\n");
             String query = "INSERT INTO vault (name, hashed_password, salt, creation_date) VALUES (?, ?, ?, ?)";
             try(Connection con = Database.getConnection();
                 PreparedStatement stmt = con.prepareStatement(query);
             )
             {
-                stmt.setString(1, userVault.getVaultName());
-                stmt.setString(2, userVault.getHashedPassword());
-                stmt.setString(3, userVault.getSalt());
-                stmt.setObject(4, userVault.getCreationDate());
+                stmt.setString(1, encryptedVault.getVaultName());
+                stmt.setString(2, encryptedVault.getHashedPassword());
+                stmt.setString(3, encryptedVault.getSalt());
+                stmt.setObject(4, encryptedVault.getCreationDate());
                 stmt.executeUpdate();
             }
 
@@ -104,7 +104,7 @@ public class Vault {
     public Category getCategory(UUID categoryId) {
         for(int i=0;i<m_categories.size(); i++)
         {
-            if(m_categories.get(i).getId() == categoryId)
+            if(m_categories.get(i).getId().equals(categoryId))
                 return m_categories.get(i);
             
         }

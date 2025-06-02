@@ -95,7 +95,6 @@ public class Service {
             if(tempEntry instanceof EntryPGP)    
             {
 
-                // System.out.println("Work in progress sorry :(");
                 EntryPGP temp = (EntryPGP) tempEntry;
 
                 System.out.println("ID: " + temp.getId());
@@ -112,12 +111,18 @@ public class Service {
                 
                 if(temp.getCategoryId()!=null)
                 {
-                    Category tempCategory = m_userVault.getCategory(temp.getCategoryId());
+                    UUID categoryID = temp.getCategoryId();
+                    Category tempCategory = m_userVault.getCategory(categoryID);
                     System.out.println("Category: " + tempCategory.getCategoryName());
                 }
 
             }
-            System.out.println("[D] Delete Entry\t[E] Edit Entry\t[C] Category\t[Q] Quit");
+            System.out.print("[D] Delete Entry\t");
+            if(tempEntry instanceof EntryLogin)
+            {
+                System.out.print("[E] Edit Entry\t");
+            }
+            System.out.println("[C] Category\t[Q] Quit");
             char option = getChar();
             switch(option)
             {
@@ -128,13 +133,21 @@ public class Service {
                     if(sure == 'y'|| sure == 'Y')
                     {
                         stop = 0;
+                        VaultImportExport.deleteEntry(tempEntry.getId());
                         m_userVault.removeEntry(tempEntry.getId());
                     }
                     break;
                 }
                 case 'E':
                 {
-
+                    if(tempEntry instanceof EntryLogin)
+                    {
+                        boolean stop1984 = true;
+                        while(stop1984) 
+                        {
+                            stop1984 = false;
+                        }
+                    }
                     break;
                 }
                 case 'C':
@@ -450,8 +463,8 @@ public class Service {
             System.out.println("Options:");  
             System.out.println("[1] Manage Entries");
             System.out.println("[2] Manage Categories");
-            System.out.println("[4] DEBUG");
             System.out.println("[3] Exit");
+            // System.out.println("[4] DEBUG");
             int Option = getInt();
             switch (Option) {
                 case 1:
@@ -467,10 +480,10 @@ public class Service {
                 case 3:
                     stop = 1;
                     break;
-                case 4:
-                {
-                    VaultImportExport.exportToDB(m_userVault);
-                }
+                // case 4:
+                // {
+                //     VaultImportExport.exportToDB(m_userVault);
+                // }
                 default:
                     continue;
             }

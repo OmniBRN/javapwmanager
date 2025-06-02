@@ -1,22 +1,35 @@
 package com.tudor;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
-import de.mkammerer.argon2.Argon2;
-import de.mkammerer.argon2.Argon2Factory;
 
 public class VaultImportExport {
     static public Vault importUserVault() throws Exception
@@ -102,6 +115,7 @@ public class VaultImportExport {
                                 SSHType = com.tudor.SSHType.Ed25519; 
 
                             EntrySSH entrySSH = new EntrySSH(entryId, name, notes, SSHType, publicKey, privateKey);
+                            entrySSH.setCategoryId(category_id);
                             encryptedEntries.add(entrySSH);
                             break;
                         }
@@ -110,6 +124,7 @@ public class VaultImportExport {
                             String privateKey = rs3.getString("private_key_pgp");
                             String publicKey = rs3.getString("public_key_pgp");
                             EntryPGP entryPGP = new EntryPGP(entryId, name, notes, privateKey, publicKey);
+                            entryPGP.setCategoryId(category_id);
                             encryptedEntries.add(entryPGP);
                             break;
                         }
@@ -134,14 +149,192 @@ public class VaultImportExport {
             
         
     }
-    static public void decryptVault(Vault userVault, String password)
+
+    static public void deleteEntry(UUID id) throws SQLException
     {
-        Argon2 argon2 = Argon2Factory.create();
-        password += userVault.getSalt();
-        String key = argon2.hash(10, 65536, 1, password.toCharArray());
+        String query = "DELETE FROM entry WHERE id = ?";
+        try(Connection con = Database.getConnection();
+            PreparedStatement stmt = con.prepareStatement(query))
+            {
+                stmt.setObject(1, id);
+                stmt.executeUpdate();
+            }
+    }
 
+    static private String encryptMessage(String message, String password, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException
+    {
 
+        SecureRandom secureRandom = new SecureRandom();
+        int iterations = 100000;
+        int length = 256;
+        byte[] saltByte = Base64.getDecoder().decode(salt);
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), saltByte, iterations, length);
+        SecretKey tmp = factory.generateSecret(spec);
+        SecretKey secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
+        // Salt generat in general, IV generat de fiecare data
+        byte[] iv = new byte[16];
+        secureRandom.nextBytes(iv);
+        IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
+        byte[] cipherText = cipher.doFinal(message.getBytes(StandardCharsets.UTF_8));
+
+        byte[] combinate = new byte[16+16+cipherText.length];
+        System.arraycopy(saltByte, 0, combinate, 0, saltByte.length);
+        System.arraycopy(iv, 0, combinate, saltByte.length, iv.length);
+        System.arraycopy(cipherText, 0, combinate, saltByte.length + iv.length, cipherText.length);
         
+        return Base64.getEncoder().encodeToString(combinate);
+        
+    }
+
+    static private String decryptMessage(String encryptedMessage, String password) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException
+    {
+
+        byte[] combined = Base64.getDecoder().decode(encryptedMessage);
+        
+        int iterations = 100000;
+        int length = 256;
+        
+        byte[] salt = new byte[16];
+        byte[] iv = new byte[16];
+        byte[] ciphertext = new byte[combined.length - 32];
+
+        System.arraycopy(combined, 0, salt, 0, salt.length);
+        System.arraycopy(combined, salt.length, iv, 0, iv.length);
+        System.arraycopy(combined, salt.length + iv.length, ciphertext, 0, ciphertext.length);
+
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, iterations, length);
+        SecretKey tmp = factory.generateSecret(spec);
+        SecretKey secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
+        
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+        byte[] decryptedMessage = cipher.doFinal(ciphertext);
+        
+        return new String(decryptedMessage, "UTF-8");
+
+    }
+
+    static public Vault encryptVault(Vault userVault, String password, String salt) throws Exception 
+    {
+        String encryptedVaultName = encryptMessage(userVault.getVaultName(), password, userVault.getSalt()) ;
+        HashMap<Integer, Category> encryptedCategories = new HashMap<Integer, Category>();
+        List<Entry> encryptedEntries = new ArrayList<>();
+
+        HashMap<Integer, Category> Categories = userVault.getCategories();
+        List<Entry> Entries = userVault.getEntries();
+        int categoriesCount = Categories.size(), entriesCount = Entries.size();
+        
+        for(int i=0; i<categoriesCount; i++)
+        {
+            Category currentCategory = Categories.get(i);
+            UUID categoryId = currentCategory.getId();
+            String encryptedCategoryName = encryptMessage(currentCategory.getCategoryName(), password, userVault.getSalt());
+
+            Category tempCategory = new Category(categoryId, encryptedCategoryName);
+            encryptedCategories.put(encryptedCategories.size(), tempCategory);
+        }
+
+        for(int i=0; i<entriesCount; i++)
+        {
+            Entry currentEntry = Entries.get(i);
+            String encryptedEntryName = encryptMessage(currentEntry.getEntryName(), password, userVault.getSalt());
+            String encryptedAdditionalNote = encryptMessage(currentEntry.getAdditionalNote(), password, userVault.getSalt());
+            if(currentEntry instanceof EntryLogin)
+            {
+                EntryLogin currentEntryLogin = (EntryLogin) currentEntry;
+                String encryptedUsername = encryptMessage(currentEntryLogin.getUsername(), password, userVault.getSalt());
+                String encryptedPassword = encryptMessage(currentEntryLogin.getPassword(), password, userVault.getSalt());
+                String encryptedEmail = encryptMessage(currentEntryLogin.getEmail(), password, userVault.getSalt());
+                EntryLogin encryptedCurrentEntryLogin = new EntryLogin(currentEntry.getId(), encryptedEntryName, encryptedAdditionalNote, encryptedPassword, encryptedUsername, encryptedEmail);
+                encryptedCurrentEntryLogin.setCategoryId(currentEntryLogin.getCategoryId());
+                encryptedEntries.add(encryptedCurrentEntryLogin);
+            }
+            if(currentEntry instanceof EntrySSH)
+            {
+                EntrySSH currentEntrySSH = (EntrySSH) currentEntry;
+                String encryptedPublicKey = encryptMessage(currentEntrySSH.getPublicKey(), password, userVault.getSalt());
+                String encryptedPrivateKey = encryptMessage(currentEntrySSH.getPrivateKey(), password, userVault.getSalt());
+                EntryLogin encryptedCurrentEntrySSH = new EntryLogin(currentEntry.getId(), encryptedEntryName, encryptedAdditionalNote, currentEntrySSH.getSSHType(), encryptedPublicKey, encryptedPrivateKey);
+                encryptedCurrentEntrySSH.setCategoryId(currentEntrySSH.getCategoryId());
+                encryptedEntries.add(encryptedCurrentEntrySSH);
+            }
+            if(currentEntry instanceof EntryPGP)
+            {
+                EntryPGP currentEntryPGP = (EntryPGP) currentEntry;
+                String encryptedPrivateKey = encryptMessage(currentEntryPGP.getPrivateKey(), password, userVault.getSalt());
+                String encryptedPublicKey = encryptMessage(currentEntryPGP.getPublicKey(), password, userVault.getSalt());
+                EntryPGP encryptedCurrentEntryPGP = new EntryPGP(currentEntry.getId(), encryptedEntryName, encryptedAdditionalNote, encryptedPrivateKey, encryptedPublicKey);
+                encryptedCurrentEntryPGP.setCategoryId(currentEntryPGP.getCategoryId());
+                encryptedEntries.add(encryptedCurrentEntryPGP);
+            }
+        }
+        Vault encryptedUserVault = new Vault(encryptedVaultName, userVault.getHashedPassword(), userVault.getSalt(), userVault.getCreationDate(), encryptedCategories, encryptedEntries);
+
+        return encryptedUserVault;
+        
+    }
+
+    static public Vault decryptVault(Vault encryptedUserVault, String password) throws Exception
+    {
+        String decryptedVaultName = decryptMessage(encryptedUserVault.getVaultName(), password);
+        HashMap<Integer, Category> decryptedCategories = new HashMap<Integer, Category>();
+        List<Entry> decryptedEntries = new ArrayList<>();
+
+        HashMap<Integer, Category> Categories = encryptedUserVault.getCategories();
+        List<Entry> Entries = encryptedUserVault.getEntries();
+        int categoriesCount = Categories.size(), entriesCount = Entries.size();
+
+        for(int i=0; i<categoriesCount; i++)
+        {
+            Category currentCategory = Categories.get(i);
+            UUID categoryId = currentCategory.getId();
+            String encryptedCategoryName = decryptMessage(currentCategory.getCategoryName(), password);
+
+            Category tempCategory = new Category(categoryId, encryptedCategoryName);
+            decryptedCategories.put(decryptedCategories.size(), tempCategory);
+        }
+
+        for(int i=0; i<entriesCount; i++)
+        {
+            Entry currentEntry = Entries.get(i);
+            String decryptedEntryName = decryptMessage(currentEntry.getEntryName(), password);
+            String decryptedAdditionalNote = decryptMessage(currentEntry.getAdditionalNote(), password);
+            if(currentEntry instanceof EntryLogin)
+            {
+                EntryLogin currentEntryLogin = (EntryLogin) currentEntry;
+                String decryptedUsername = decryptMessage(currentEntryLogin.getUsername(), password);
+                String decryptedPassword = decryptMessage(currentEntryLogin.getPassword(), password);
+                String decryptedEmail = decryptMessage(currentEntryLogin.getEmail(), password);
+                EntryLogin decryptedCurrentEntryLogin = new EntryLogin(currentEntry.getId(), decryptedEntryName, decryptedAdditionalNote, decryptedPassword, decryptedUsername, decryptedEmail);
+                decryptedCurrentEntryLogin.setCategoryId(currentEntryLogin.getCategoryId());
+                decryptedEntries.add(decryptedCurrentEntryLogin);
+            }
+            if(currentEntry instanceof EntrySSH)
+            {
+                EntrySSH currentEntrySSH = (EntrySSH) currentEntry;
+                String decryptedPublicKey = decryptMessage(currentEntrySSH.getPublicKey(), password);
+                String decryptedPrivateKey = decryptMessage(currentEntrySSH.getPrivateKey(), password);
+                EntryLogin decryptedCurrentEntrySSH = new EntryLogin(currentEntry.getId(), decryptedEntryName, decryptedAdditionalNote, currentEntrySSH.getSSHType(), decryptedPublicKey, decryptedPrivateKey);
+                decryptedCurrentEntrySSH.setCategoryId(currentEntrySSH.getCategoryId());
+                decryptedEntries.add(decryptedCurrentEntrySSH);
+            }
+            if(currentEntry instanceof EntryPGP)
+            {
+                EntryPGP currentEntryPGP = (EntryPGP) currentEntry;
+                String decryptedPrivateKey = decryptMessage(currentEntryPGP.getPrivateKey(), password);
+                String decryptedPublicKey = decryptMessage(currentEntryPGP.getPublicKey(), password);
+                EntryPGP decryptedCurrentEntryPGP = new EntryPGP(currentEntry.getId(), decryptedEntryName, decryptedAdditionalNote, decryptedPrivateKey, decryptedPublicKey);
+                decryptedCurrentEntryPGP.setCategoryId(currentEntryPGP.getCategoryId());
+                decryptedEntries.add(decryptedCurrentEntryPGP);
+            }
+        }
+        Vault decryptedUserVault = new Vault(decryptedVaultName, encryptedUserVault.getHashedPassword(), encryptedUserVault.getSalt(), encryptedUserVault.getCreationDate(), decryptedCategories, decryptedEntries);
+        return decryptedUserVault;
     }
     static public void exportToDB(Vault userVault) throws Exception {
         // Vault can't really change
